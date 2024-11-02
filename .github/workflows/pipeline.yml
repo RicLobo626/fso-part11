@@ -8,6 +8,9 @@ on:
     branches: [main]
     types: [opened, synchronize]
 
+env:
+  SHOULD_DEPLOY_AND_TAG: ${{github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+
 jobs:
   deployment_pipeline:
     runs-on: ubuntu-20.04
@@ -33,11 +36,11 @@ jobs:
           path: playwright-report/
           retention-days: 30
       - name: Deploy
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ env.SHOULD_DEPLOY_AND_TAG == 'true' }}
         env:
-          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          DEPLOY_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          curl "$deploy_url"
+          curl "$DEPLOY_URL"
 
   tag_release:
     needs: [deployment_pipeline]
@@ -47,7 +50,7 @@ jobs:
         with:
           fetch-depth: '0'
       - name: Bump version and push tag
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ env.SHOULD_DEPLOY_AND_TAG == 'true' }}
         uses: anothrNick/github-tag-action@1.71.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
