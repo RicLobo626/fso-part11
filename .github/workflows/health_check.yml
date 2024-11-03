@@ -2,7 +2,7 @@ name: Health Check
 
 on:
   schedule:
-    - cron: '*/1 * * * *'
+    - cron: '0 10 * * *'
 
 env:
   MAX_ATTEMPTS: 3
