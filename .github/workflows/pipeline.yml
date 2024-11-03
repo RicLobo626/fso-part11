@@ -53,8 +53,8 @@ jobs:
           curl "$DEPLOY_URL"
 
       - name: Notify success
+        if: ${{ env.SHOULD_DEPLOY_AND_TAG == 'true' && success() }}
         uses: stegzilla/discord-notify@v4
-        if: ${{ success() }}
         with:
           webhook_url: ${{ secrets.FSO_DISCORD_HOOK_URL }}
           username: GitHub Notifier
@@ -66,8 +66,8 @@ jobs:
             Commit message: ${{ github.event.head_commit.message }}
 
       - name: Notify failure
+        if: ${{ env.SHOULD_DEPLOY_AND_TAG == 'true' && failure() }}
         uses: stegzilla/discord-notify@v4
-        if: ${{ failure() }}
         with:
           webhook_url: ${{ secrets.FSO_DISCORD_HOOK_URL }}
           username: GitHub Notifier
