@@ -62,8 +62,8 @@ jobs:
           title: A new version of Pokedex deployed
           message: |
             Deployed by ${{ github.event.head_commit.author.name }}
-            URL: ${{ github.event.head_commit.url }}
-            Message: ${{ github.event.head_commit.message }}
+            Commit URL: ${{ github.event.head_commit.url }}
+            Commit message: ${{ github.event.head_commit.message }}
 
       - name: Notify failure
         uses: stegzilla/discord-notify@v4
@@ -75,8 +75,8 @@ jobs:
           title: Build failed
           message: |
             Build broken by ${{ github.event.head_commit.author.name }}
-            URL: ${{ github.event.head_commit.url }}
-            Message: ${{ github.event.head_commit.message }}
+            Commit URL: ${{ github.event.head_commit.url }}
+            Commit message: ${{ github.event.head_commit.message }}
 
   tag_release:
     needs: [deployment_pipeline]
