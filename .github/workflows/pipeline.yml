@@ -11,7 +11,6 @@ on:
 
 env:
   SHOULD_DEPLOY_AND_TAG: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
-  COMMIT_MESSAGE: ${{ github.event.commits[0].message }}
 
 jobs:
   deployment_pipeline:
