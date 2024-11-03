@@ -52,6 +52,9 @@ jobs:
         run: |
           curl "$DEPLOY_URL"
 
+      - name: Simulate failure
+        run: exit 1
+
       - name: Notify success
         uses: stegzilla/discord-notify@v4
         if: ${{ success() }}
