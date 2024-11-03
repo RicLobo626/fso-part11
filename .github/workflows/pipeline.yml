@@ -4,43 +4,79 @@ on:
   push:
     branches:
       - main
+
   pull_request:
     branches: [main]
     types: [opened, synchronize]
 
 env:
-  SHOULD_DEPLOY_AND_TAG: ${{github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+  SHOULD_DEPLOY_AND_TAG: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+  COMMIT_MESSAGE: ${{ github.event.commits[0].message }}
 
 jobs:
   deployment_pipeline:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Install dependencies
         run: npm install
+
       - name: Lint
         run: npm run eslint
+
       - name: Test
         run: npm test
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
+
       - name: Test E2E
         run: npm run test:e2e
+
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
       - name: Deploy
         if: ${{ env.SHOULD_DEPLOY_AND_TAG == 'true' }}
         env:
           DEPLOY_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           curl "$DEPLOY_URL"
+
+      - name: Notify success
+        uses: stegzilla/discord-notify@v4
+        if: ${{ success() }}
+        with:
+          webhook_url: ${{ secrets.FSO_DISCORD_HOOK_URL }}
+          username: GitHub Notifier
+          colour: '00ff00'
+          title: A new version of Pokedex deployed
+          message: |
+            Deployed by ${{ github.event.head_commit.author.name }}
+            URL: ${{ github.event.head_commit.url }}
+            Message: ${{ github.event.head_commit.message }}
+
+      - name: Notify failure
+        uses: stegzilla/discord-notify@v4
+        if: ${{ failure() }}
+        with:
+          webhook_url: ${{ secrets.FSO_DISCORD_HOOK_URL }}
+          username: GitHub Notifier
+          colour: 'ff0000'
+          title: Build failed
+          message: |
+            Build broken by ${{ github.event.head_commit.author.name }}
+            URL: ${{ github.event.head_commit.url }}
+            Message: ${{ github.event.head_commit.message }}
 
   tag_release:
     needs: [deployment_pipeline]
@@ -49,6 +85,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: '0'
+
       - name: Bump version and push tag
         if: ${{ env.SHOULD_DEPLOY_AND_TAG == 'true' }}
         uses: anothrNick/github-tag-action@1.71.0
